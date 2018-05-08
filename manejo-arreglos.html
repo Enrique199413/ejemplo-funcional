@@ -1,0 +1,83 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-button/paper-button.html">
+
+<dom-module id="manejo-arreglos">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <template is="dom-repeat" items="[[arreglo]]" as="bank">
+      <template is="dom-if" if="[[sinFondos(bank.suma)]]">
+        <p>Ya no tienes dinero</p>
+      </template>
+      <p>[[bank.bank]] - Total de transacciones: [[bank.suma]]</p>
+      <paper-input value="{{bank.currency::input}}" disabled$="[[sinFondos(bank.suma)]]"></paper-input>
+      <paper-button on-click="saveTransaction" raised>Guardar</paper-button>
+    </template>
+    <h2>Lista de transacciones</h2>
+    <template is="dom-repeat" items="[[transactions]]" as="transaction">
+      <p>[[transaction.date]] - [[transaction.bank]] monto: [[transaction.currency]]</p>
+    </template>
+  </template>
+
+  <script>
+    /**
+     * `manejo-arreglos`
+     *
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class ManejoArreglos extends Polymer.Element {
+      static get is() { return 'manejo-arreglos' }
+
+      static get properties() {
+        return {
+          arreglo: {
+            type: Array,
+            value: [
+              {
+                bank: 'BBVA',
+                currency: 0
+              },
+              {
+                bank: 'Banco 2',
+                currency: 0
+              }
+            ]
+          },
+          transactions: {
+            type: Array,
+            value: []
+          }
+        }
+      }
+
+      saveTransaction(e) {
+        this.push('transactions', {
+          date: new Date(),
+          bank: e.model.bank.bank,
+          currency: e.model.bank.currency
+        })
+
+        console.log(e.model.index, e.model.bank)
+
+          let regresaValor = this.get(`arreglo.${e.model.index}.suma`) === undefined ? 0 : this.get(`arreglo.${e.model.index}.suma`)
+          console.log(regresaValor)
+          this.set(`arreglo.${e.model.index}.suma`, parseInt(regresaValor) + parseInt(e.model.bank.currency))
+          console.log(this.get(`arreglo`))
+
+      }
+      sinFondos(valorActual) {
+        console.log(valorActual)
+        return parseInt(valorActual) > 8000
+      }
+    }
+
+    window.customElements.define(ManejoArreglos.is, ManejoArreglos)
+  </script>
+</dom-module>
