@@ -5,17 +5,17 @@
 <dom-module id="manejo-arreglos">
   <template>
     <style>
-      :host {
-        display: block;
-      }
+    :host {
+      display: block;
+    }
     </style>
     <template is="dom-repeat" items="[[arreglo]]" as="bank">
-      <template is="dom-if" if="[[sinFondos(bank.suma)]]">
-        <p>Ya no tienes dinero</p>
+      <template is="dom-if" if="[[bank.sinFondos]]">
+        <p style="color:red">No tienes dinero suficiente para realizar la transacción</p>
       </template>
       <p>[[bank.bank]] - Total de transacciones: [[bank.suma]]</p>
-      <paper-input value="{{bank.currency::input}}" disabled$="[[sinFondos(bank.suma)]]"></paper-input>
-      <paper-button on-click="saveTransaction" raised>Guardar</paper-button>
+      <paper-input value="{{bank.currency::input}}" disabled$="[[disabledButton(bank.suma)]]" id="input[[index]]"></paper-input>
+      <paper-button on-click="saveTransaction" raised disabled$="[[disabledButton(bank.suma)]]">Guardar</paper-button>
     </template>
     <h2>Lista de transacciones</h2>
     <template is="dom-repeat" items="[[transactions]]" as="transaction">
@@ -24,60 +24,64 @@
   </template>
 
   <script>
-    /**
-     * `manejo-arreglos`
-     *
-     *
-     * @customElement
-     * @polymer
-     * @demo demo/index.html
-     */
-    class ManejoArreglos extends Polymer.Element {
-      static get is() { return 'manejo-arreglos' }
+  /**
+  * `manejo-arreglos`
+  *
+  *
+  * @customElement
+  * @polymer
+  * @demo demo/index.html
+  */
+  class ManejoArreglos extends Polymer.Element {
+    static get is() { return 'manejo-arreglos' }
 
-      static get properties() {
-        return {
-          arreglo: {
-            type: Array,
-            value: [
-              {
-                bank: 'BBVA',
-                currency: 0
-              },
-              {
-                bank: 'Banco 2',
-                currency: 0
-              }
-            ]
-          },
-          transactions: {
-            type: Array,
-            value: []
-          }
+    static get properties() {
+      return {
+        arreglo: {
+          type: Array,
+          value: [
+            {
+              bank: 'BBVA',
+              currency: 0,
+              sinFondos: false,
+            },
+            {
+              bank: 'Banco 2',
+              currency: 0,
+              sinFondos: false,
+            }
+          ]
+        },
+        transactions: {
+          type: Array,
+          value: []
         }
-      }
-
-      saveTransaction(e) {
-        this.push('transactions', {
-          date: new Date(),
-          bank: e.model.bank.bank,
-          currency: e.model.bank.currency
-        })
-
-        console.log(e.model.index, e.model.bank)
-
-          let regresaValor = this.get(`arreglo.${e.model.index}.suma`) === undefined ? 0 : this.get(`arreglo.${e.model.index}.suma`)
-          console.log(regresaValor)
-          this.set(`arreglo.${e.model.index}.suma`, parseInt(regresaValor) + parseInt(e.model.bank.currency))
-          console.log(this.get(`arreglo`))
-
-      }
-      sinFondos(valorActual) {
-        console.log(valorActual)
-        return parseInt(valorActual) > 8000
       }
     }
 
-    window.customElements.define(ManejoArreglos.is, ManejoArreglos)
+    saveTransaction(e) {
+      let regresaValor = this.get(`arreglo.${e.model.index}.suma`) === undefined ? 0 : this.get(`arreglo.${e.model.index}.suma`)
+      let suma = parseInt(regresaValor) + parseInt(e.model.bank.currency)
+      if (e.model.bank.currency > 0 && suma <= 8000) {
+        this.push('transactions', {
+          date: new Date(),
+          bank: e.model.bank.bank,
+          currency: parseInt(e.model.bank.currency)
+        })
+        this.set(`arreglo.${e.model.index}.suma`, suma)
+        this.set(`arreglo.${e.model.index}.sinFondos`, false)
+      } else if(suma>8000){
+        this.set(`arreglo.${e.model.index}.sinFondos`, true)
+      }
+      //this.shadowRoot.querySelector("#input"+ e.model.index).value = 0
+      this.set(`arreglo.${e.model.index}.currency`, 0)
+    }
+
+    disabledButton(suma) {
+      return suma == 8000
+    }
+  }
+
+  window.customElements.define(ManejoArreglos.is, ManejoArreglos)
   </script>
 </dom-module>
